@@ -1,17 +1,35 @@
-# practica_05_api
+# Práctica 6 (ejercicio evaluable): Gestor offline de tareas
 
-A new Flutter project.
+## Objetivo
+Desarrollar un gestor de tareas que funcione sin internet, con SQLite para guardar las tareas y SharedPreferences para recordar preferencias de la interfaz.
 
-## Getting Started
+## Requisitos
+- Flutter y Dart instalados
+- Dispositivo, emulador o macOS de escritorio
+- Paquetes: sqflite, shared_preferences, path
 
-This project is a starting point for a Flutter application.
+## Instalación
+flutter pub get
 
-A few resources to get you started if this is your first Flutter project:
+## Ejecución
+flutter run -d macos
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Qué hace la app
+- Crear, consultar, editar y eliminar tareas (SQLite).
+- Marcar tareas como completadas.
+- Filtrar por todas, pendientes o completadas; el filtro se guarda con SharedPreferences.
+- Guardar el nombre del usuario con SharedPreferences.
+- Validación: el título es obligatorio y debe tener mínimo 3 caracteres.
+- Eliminar pide confirmación.
+- Funciona sin internet porque todo se guarda en el dispositivo.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Bandera pendiente_sincronizar
+Cada tarea tiene la columna pendiente_sincronizar (1 = pendiente, 0 = enviado). Se pone en 1 al crear, editar o completar una tarea, y sirve para saber qué cambios locales faltan por enviar a un servidor.
+
+## Pruebas
+- flutter analyze: sin problemas
+- flutter test: todas las pruebas pasan
+- Casos manuales: alta, edición, completar, baja con confirmación, filtro y nombre persistentes, y funcionamiento sin conexión
+
+## Participantes
+- Josue Hilario Cab Ku
