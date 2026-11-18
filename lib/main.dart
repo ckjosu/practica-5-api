@@ -1,121 +1,202 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'punto.dart';
+
+void main() => runApp(
+  MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Puntos de interés',
+    theme: ThemeData(colorSchemeSeed: Colors.deepOrange, useMaterial3: true),
+    home: const PuntosPage(),
+  ),
+);
+
+class PuntosPage extends StatefulWidget {
+  const PuntosPage({super.key});
+  @override
+  State<PuntosPage> createState() => _PuntosPageState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _PuntosPageState extends State<PuntosPage> {
+  final _nombreCtrl = TextEditingController();
+  final List<Punto> _puntos = [];
+  Position? _actual;
+  String _mensaje = 'Sin ubicación';
+  bool _buscando = false;
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+  void dispose() {
+    _nombreCtrl.dispose();
+    super.dispose();
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  void _aviso(String texto) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(texto)));
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
+  Future<void> _obtener() async {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _buscando = true;
+      _mensaje = 'Buscando ubicación...';
+    });
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        setState(() => _mensaje = 'Activa el servicio de ubicación');
+        return;
+      }
+      var permiso = await Geolocator.checkPermission();
+      if (permiso == LocationPermission.denied) {
+        permiso = await Geolocator.requestPermission();
+      }
+      if (permiso == LocationPermission.denied ||
+          permiso == LocationPermission.deniedForever) {
+        setState(() => _mensaje = 'Permiso de ubicación no disponible');
+        return;
+      }
+      final p = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      setState(() {
+        _actual = p;
+        _mensaje = 'Ubicación obtenida';
+      });
+    } catch (e) {
+      setState(() => _mensaje = 'Error al obtener ubicación: $e');
+    } finally {
+      if (mounted) setState(() => _buscando = false);
+    }
+  }
+
+  void _guardar() {
+    final nombre = _nombreCtrl.text.trim();
+    final actual = _actual;
+    if (actual == null) {
+      _aviso('Primero obtén tu ubicación');
+      return;
+    }
+    if (nombre.isEmpty) {
+      _aviso('Escribe un nombre para el punto');
+      return;
+    }
+    setState(() {
+      _puntos.add(
+        Punto(
+          nombre: nombre,
+          latitud: actual.latitude,
+          longitud: actual.longitude,
+        ),
+      );
+      _nombreCtrl.clear();
     });
   }
 
+  Future<void> _abrirMapa(Punto p) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${p.latitud},${p.longitud}',
+    );
+    try {
+      var ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok) ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+      if (!ok) _aviso('No se pudo abrir el mapa');
+    } catch (e) {
+      _aviso('Error al abrir el mapa: $e');
+    }
+  }
+
+  String _distancia(Punto p) {
+    final a = _actual;
+    if (a == null) return 'Obtén tu ubicación para ver la distancia';
+    return 'Distancia: ${Punto.formatear(p.distanciaDesde(a.latitude, a.longitude))}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final actual = _actual;
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      appBar: AppBar(title: const Text('Puntos de interés')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const Icon(Icons.my_location, size: 48),
+                  Text(_mensaje, textAlign: TextAlign.center),
+                  if (actual != null) ...[
+                    Text('Latitud: ${actual.latitude}'),
+                    Text('Longitud: ${actual.longitude}'),
+                    Text('Precisión: ${actual.accuracy} m'),
+                  ],
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: _buscando ? null : _obtener,
+                    icon: const Icon(Icons.gps_fixed),
+                    label: const Text('Obtener ubicación actual'),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _nombreCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del punto',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          FilledButton.tonalIcon(
+            onPressed: _guardar,
+            icon: const Icon(Icons.add_location_alt),
+            label: const Text('Guardar punto'),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Puntos guardados: ${_puntos.length} (mínimo 3)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          if (_puntos.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Aún no hay puntos guardados'),
+            ),
+          for (var i = 0; i < _puntos.length; i++)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.place),
+                title: Text(_puntos[i].nombre),
+                subtitle: Text(
+                  'Lat: ${_puntos[i].latitud.toStringAsFixed(6)}\n'
+                  'Lon: ${_puntos[i].longitud.toStringAsFixed(6)}\n'
+                  '${_distancia(_puntos[i])}',
+                ),
+                isThreeLine: true,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.map),
+                      tooltip: 'Abrir en mapa',
+                      onPressed: () => _abrirMapa(_puntos[i]),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      tooltip: 'Eliminar',
+                      onPressed: () => setState(() => _puntos.removeAt(i)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

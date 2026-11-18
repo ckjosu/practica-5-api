@@ -1,30 +1,19 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:practica_05_api/main.dart';
+import 'package:practica_05_api/punto.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  const punto = Punto(nombre: 'Casa', latitud: 20.0, longitud: -90.0);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('la distancia al mismo punto es 0', () {
+    expect(punto.distanciaDesde(20.0, -90.0), 0);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('la distancia a otro punto es mayor a 0', () {
+    expect(punto.distanciaDesde(20.1, -90.0), greaterThan(0));
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('formatea metros y kilómetros', () {
+    expect(Punto.formatear(250), '250 m');
+    expect(Punto.formatear(1500), '1.50 km');
   });
 }
