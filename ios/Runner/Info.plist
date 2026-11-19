@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Para tomar la foto del reporte</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Para guardar la ubicación del reporte</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Para elegir una foto del reporte</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
