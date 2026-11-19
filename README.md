@@ -1,17 +1,32 @@
-# practica_05_api
+# Práctica 10 - Ejercicio evaluable: Control de Gastos
 
-A new Flutter project.
+Alumno: Josue Hilario Cab Ku
+Materia: Tópicos de Programación Móvil, grupo 7A, ITESCAM
 
-## Getting Started
+## Qué hace la app
+Sirve para registrar gastos personales. Se guardan en el teléfono con SQLite, se puede agregar la ubicación donde se hizo el gasto y la pestaña "Dólar" muestra el tipo de cambio actual desde una API.
 
-This project is a starting point for a Flutter application.
+## Pantallas
+1. Lista de gastos con el total acumulado.
+2. Formulario de nuevo gasto (con validaciones).
+3. Detalle del gasto, con opción de eliminar.
+4. Tipo de cambio USD a MXN.
 
-A few resources to get you started if this is your first Flutter project:
+## Requisitos que cumple
+- Formulario validado: concepto de mínimo 3 caracteres, monto mayor a 0 y categoría.
+- Consumo de API REST: open.er-api.com, con estados de carga y error y botón de reintentar.
+- Persistencia local: SQLite con sqflite (la lista funciona sin internet).
+- Capacidad del dispositivo: ubicación con geolocator.
+- Notificación local al guardar un gasto.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Cómo ejecutarlo
+    flutter pub get
+    flutter run
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Estructura
+- lib/models: modelo Gasto
+- lib/services: base de datos, API, ubicación y notificaciones
+- lib/screens: pantallas de la app
+
+## Evidencias
+Capturas en docs/evidencias/practica-10-ejercicio/
