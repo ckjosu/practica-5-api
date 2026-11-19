@@ -9,7 +9,9 @@ import '../services/ubicacion_service.dart';
 
 class NuevoReporteScreen extends StatefulWidget {
   const NuevoReporteScreen({super.key});
+  
   @override
+  
   State<NuevoReporteScreen> createState() => _NuevoReporteScreenState();
 }
 
@@ -30,7 +32,10 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   String _mensaje = '';
   bool _guardando = false;
 
+  
   @override
+
+  
   void dispose() {
     _tituloCtrl.dispose();
     _descCtrl.dispose();
@@ -41,6 +46,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     try {
       final f = await ImagePicker()
           .pickImage(source: ImageSource.camera, imageQuality: 75);
+      if (!mounted) return;
       if (f == null) {
         setState(() => _mensaje = 'Captura cancelada');
         return;
@@ -60,15 +66,16 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     setState(() => _mensaje = 'Buscando ubicación...');
     try {
       final p = await UbicacionService.obtener();
+      if (!mounted) return;
       setState(() {
         _lat = p.latitude;
         _lon = p.longitude;
         _mensaje = 'Ubicación obtenida';
       });
     } on UbicacionException catch (e) {
-      setState(() => _mensaje = e.mensaje);
+      if (mounted) setState(() => _mensaje = e.mensaje);
     } catch (_) {
-      setState(() => _mensaje = 'No se pudo obtener la ubicación');
+      if (mounted) setState(() => _mensaje = 'No se pudo obtener la ubicación');
     }
   }
 

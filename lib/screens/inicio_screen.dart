@@ -5,7 +5,9 @@ import 'reportes_view.dart';
 
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
+  
   @override
+  
   State<InicioScreen> createState() => _InicioScreenState();
 }
 
@@ -26,7 +28,10 @@ class _InicioScreenState extends State<InicioScreen> {
     }
   }
 
+  
   @override
+
+  
   Widget build(BuildContext context) {
     final vistas = [
       ReportesView(key: ValueKey(_version)),

@@ -7,7 +7,10 @@ class TarjetaReporte extends StatelessWidget {
   final VoidCallback onTap;
   const TarjetaReporte({super.key, required this.reporte, required this.onTap});
 
+  
   @override
+
+  
   Widget build(BuildContext context) => Card(
         child: ListTile(
           onTap: onTap,

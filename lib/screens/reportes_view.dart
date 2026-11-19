@@ -6,7 +6,9 @@ import 'detalle_screen.dart';
 
 class ReportesView extends StatefulWidget {
   const ReportesView({super.key});
+  
   @override
+  
   State<ReportesView> createState() => _ReportesViewState();
 }
 
@@ -23,7 +25,10 @@ class _ReportesViewState extends State<ReportesView> {
     if (cambio == true) _recargar();
   }
 
+  
   @override
+
+  
   Widget build(BuildContext context) => FutureBuilder<List<Reporte>>(
         future: _futuro,
         builder: (context, s) {
