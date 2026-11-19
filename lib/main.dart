@@ -11,6 +11,8 @@ Future<void> main() async {
 class GastosApp extends StatelessWidget {
   const GastosApp({super.key});
   
+  @override
+  
   Widget build(BuildContext context) => MaterialApp(
         title: 'Control de Gastos',
         debugShowCheckedModeBanner: false,

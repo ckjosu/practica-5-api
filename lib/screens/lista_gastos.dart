@@ -7,6 +7,9 @@ class ListaGastos extends StatelessWidget {
   const ListaGastos({super.key, required this.lista, required this.onTap});
 
  
+  @override
+
+ 
   Widget build(BuildContext context) {
     final total = lista.fold<double>(0, (a, g) => a + g.monto);
     return Column(

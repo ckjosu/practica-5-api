@@ -6,6 +6,8 @@ import 'nuevo_gasto_screen.dart';
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
   
+  @override
+  
   State<InicioScreen> createState() => _InicioScreenState();
 }
 

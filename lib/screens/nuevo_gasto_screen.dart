@@ -7,6 +7,8 @@ import '../services/ubicacion_service.dart';
 class NuevoGastoScreen extends StatefulWidget {
   const NuevoGastoScreen({super.key});
   
+  @override
+  
   State<NuevoGastoScreen> createState() => _NuevoGastoScreenState();
 }
 
@@ -21,6 +23,9 @@ class _NuevoGastoScreenState extends State<NuevoGastoScreen> {
   bool _guardando = false;
 
  
+  @override
+
+ 
   void dispose() {
     _concepto.dispose();
     _monto.dispose();
@@ -31,15 +36,16 @@ class _NuevoGastoScreenState extends State<NuevoGastoScreen> {
     setState(() => _mensaje = 'Buscando ubicación...');
     try {
       final p = await UbicacionService.obtener();
+      if (!mounted) return;
       setState(() {
         _lat = p.latitude;
         _lon = p.longitude;
         _mensaje = 'Ubicación guardada';
       });
     } on UbicacionException catch (e) {
-      setState(() => _mensaje = e.mensaje);
+      if (mounted) setState(() => _mensaje = e.mensaje);
     } catch (_) {
-      setState(() => _mensaje = 'No se pudo obtener la ubicación');
+      if (mounted) setState(() => _mensaje = 'No se pudo obtener la ubicación');
     }
   }
 

@@ -4,6 +4,8 @@ import '../services/api_service.dart';
 class CambioScreen extends StatefulWidget {
   const CambioScreen({super.key});
  
+  @override
+ 
   State<CambioScreen> createState() => _CambioScreenState();
 }
 
@@ -11,6 +13,9 @@ class _CambioScreenState extends State<CambioScreen> {
   late Future<double> _futuro = ApiService.dolarEnPesos();
 
   void _reintentar() => setState(() => _futuro = ApiService.dolarEnPesos());
+
+ 
+  @override
 
  
   Widget build(BuildContext context) => FutureBuilder<double>(

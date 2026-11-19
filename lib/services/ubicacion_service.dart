@@ -4,6 +4,8 @@ class UbicacionException implements Exception {
   final String mensaje;
   const UbicacionException(this.mensaje);
   
+  @override
+  
   String toString() => mensaje;
 }
 
