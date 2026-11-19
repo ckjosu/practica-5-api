@@ -1,30 +1,23 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:practica_05_api/main.dart';
+import 'package:practica_05_api/registro.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  final registro = Registro(
+    rutaFoto: 'foto.jpg',
+    fecha: DateTime(2026, 11, 18, 18, 30, 5),
+    acelerometro: [1, 2, 3],
+    giroscopio: [0.5, 0, -1],
+  );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('formatea la fecha y la hora', () {
+    expect(registro.fechaTexto, '18/11/2026 18:30:05');
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('formatea un vector con dos decimales', () {
+    expect(Registro.vector(registro.acelerometro), 'X: 1.00  Y: 2.00  Z: 3.00');
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('guarda los valores de los sensores', () {
+    expect(registro.giroscopio, [0.5, 0, -1]);
   });
 }

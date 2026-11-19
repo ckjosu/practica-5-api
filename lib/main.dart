@@ -1,122 +1,170 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'registro.dart';
+
+void main() => runApp(
+  MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Bitácora de inspección',
+    theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+    home: const BitacoraPage(),
+  ),
+);
+
+class BitacoraPage extends StatefulWidget {
+  const BitacoraPage({super.key});
+  @override
+  State<BitacoraPage> createState() => _BitacoraPageState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _BitacoraPageState extends State<BitacoraPage> {
+  final List<Registro> _registros = [];
+  List<double> _acel = [0, 0, 0];
+  List<double> _giro = [0, 0, 0];
+  String _mensaje = '';
+  StreamSubscription<AccelerometerEvent>? _acelSub;
+  StreamSubscription<GyroscopeEvent>? _giroSub;
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+  void initState() {
+    super.initState();
+    _acelSub = accelerometerEventStream().listen(
+      (e) {
+        if (mounted) setState(() => _acel = [e.x, e.y, e.z]);
+      },
+      onError: (_) {
+        if (mounted) setState(() => _mensaje = 'Acelerómetro no disponible');
+      },
+    );
+    _giroSub = gyroscopeEventStream().listen(
+      (e) {
+        if (mounted) setState(() => _giro = [e.x, e.y, e.z]);
+      },
+      onError: (_) {
+        if (mounted) setState(() => _mensaje = 'Giroscopio no disponible');
+      },
     );
   }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
+  void dispose() {
+    _acelSub?.cancel();
+    _giroSub?.cancel();
+    super.dispose();
+  }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  Future<void> _nuevaInspeccion() async {
+    try {
+      final f = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 75,
+      );
+      if (f == null) {
+        setState(() => _mensaje = 'Captura cancelada');
+        return;
+      }
+      setState(() {
+        _registros.insert(
+          0,
+          Registro(
+            rutaFoto: f.path,
+            fecha: DateTime.now(),
+            acelerometro: List.of(_acel),
+            giroscopio: List.of(_giro),
+          ),
+        );
+        _mensaje = 'Inspección registrada';
+      });
+    } on PlatformException catch (e) {
+      setState(
+        () => _mensaje = e.code == 'camera_access_denied'
+            ? 'Permiso de cámara denegado. Actívalo en Ajustes del dispositivo.'
+            : 'Error de cámara: ${e.message ?? e.code}',
+      );
+    } catch (e) {
+      setState(() => _mensaje = 'No se pudo usar la cámara: $e');
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Bitácora de inspección')),
+    body: ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Lecturas en vivo',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text('Acelerómetro  ${Registro.vector(_acel)}'),
+                Text('Giroscopio  ${Registro.vector(_giro)}'),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: _nuevaInspeccion,
+          icon: const Icon(Icons.camera_alt),
+          label: const Text('Nueva inspección'),
+        ),
+        if (_mensaje.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(_mensaje),
+          ),
+        const SizedBox(height: 16),
+        if (_registros.isEmpty)
+          const Center(child: Text('Aún no hay inspecciones registradas')),
+        for (final r in _registros) _TarjetaEvidencia(registro: r),
+      ],
+    ),
+  );
+}
+
+class _TarjetaEvidencia extends StatelessWidget {
+  final Registro registro;
+  const _TarjetaEvidencia({required this.registro});
+
+  @override
+  Widget build(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
+    margin: const EdgeInsets.only(bottom: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Image.file(
+          File(registro.rutaFoto),
+          height: 220,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Fecha y hora: ${registro.fechaTexto}'),
+              const SizedBox(height: 4),
+              Text('Acelerómetro  ${Registro.vector(registro.acelerometro)}'),
+              Text('Giroscopio  ${Registro.vector(registro.giroscopio)}'),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
